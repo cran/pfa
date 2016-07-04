@@ -17,6 +17,6 @@
      	
      	ftp:/ftp.sanger.ac.uk/pub/genevar}
      \references{
-       Fan, Han and Gu (2011) "Estimating False Discovery Proportion Under Arbitrary Covariance Dependence" (with discussion) JASA.
+       Fan, Han and Gu (2012) "Estimating False Discovery Proportion Under Arbitrary Covariance Dependence" (with discussion) JASA.
      }
      \keyword{datasets}

@@ -2,15 +2,15 @@ Package: pfa
 Type: Package
 Title: Estimates False Discovery Proportion Under Arbitrary Covariance
         Dependence
-Version: 1.0
-Date: 2012-11-25
+Version: 1.1
+Date: 2016-06-24
 Author: Jianqing Fan, Tracy Ke, Sydney Li and Lucy Xia
-Maintainer: Tracy Ke <zke@princeton.edu>
-Description: This package contains functions for performing multiple
-        testing and estimating the false discovery proportion (FDP).
+Maintainer: Tracy Ke  <zke@galton.uchicago.edu>
+Description: Estimate the false discovery proportion (FDP) by Principal Factor Approximation method with general known and unknown covariance dependence.
 License: GPL-2
 Depends: lars, POET, quantreg
 Suggests: MASS
-Packaged: 2012-12-03 02:08:38 UTC; zke
+Packaged: 2016-07-03 14:50:54 UTC; Stat-xuhan
 Repository: CRAN
-Date/Publication: 2012-12-04 07:28:23
+Date/Publication: 2016-07-04 09:16:46
+NeedsCompilation: no

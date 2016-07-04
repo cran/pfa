@@ -12,8 +12,8 @@ This package contains functions for performing multiple testing and estimating t
 in p hypotheses; \code{pfa.test(X,Y,...)} tests the difference of two multiple-dimensional population means; \code{pfa.gwas(X,Y,...)} performs the genome-wise association study(GWAS).
 }
 \usage{
-pfa.test(X, Y, tval, Sigma, reg = "L1", K, e=0.05, gamma, mat_est="poet", plot="-log")
-pfa.gwas(X, Y, tval, v, reg="L1", e=0.05, gamma, K, plot="-log")
+pfa.test(X,Y,tval,Sigma,reg="L2",K,e=0.05,gamma,mat_est="poet",plot="-log")
+pfa.gwas(X,Y,tval,v,reg="L1",e=0.05,gamma,K,plot="-log")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -29,7 +29,7 @@ pfa.gwas(X, Y, tval, v, reg="L1", e=0.05, gamma, K, plot="-log")
   \item{tval}{ a sequence of thresholding level for p-values. By default, \code{tval} is chosen automatically.
 %%     
 }
-  \item{reg}{method used to estimate factors. If reg="L1", the method is LASSO; if reg="L2", the method is least-squares (with large outliers filtered out). Default is "L1".
+  \item{reg}{method used to estimate factors. If reg="L1", the method is least absolute value regression; if reg="L2", the method is least-squares (with large outliers filtered out). Default is "L1".
 %%     
 }
   \item{K}{ number of factors. By default, given the covariance matrix, K is the smallest integer such that the sum of squares of the smallest (p-K) eigenvalues is no larger than e=0.01 times its trace.
@@ -51,12 +51,12 @@ pfa.gwas(X, Y, tval, v, reg="L1", e=0.05, gamma, K, plot="-log")
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 \code{pfa.test(X,Sigma=Sigma,...)}: X is a vector of test statistics. Suppose it has a multivariate Gaussian distribution \code{N(mu, Sigma)}. 
-We would like to test: \code{mu(i)=0, i=1,...,p}. Given a threshold \code{t}, we reject hypothesis \code{i} if and only if \code{P(i)= X(i)/sqrt(Sigma(i,i)) < t, i=1,...,p}. We apply the PFA method [Fan, Han and Gu (2011)] to estimate the false discovery proportion (FDP) for arbitrary thresholds.
+We would like to test: \code{mu(i)=0, i=1,...,p}. Given a threshold \code{t}, we reject hypothesis \code{i} if and only if \code{P(i)=X(i)/sqrt(Sigma(i,i))<t},\code{i=1,...,p}. We apply the PFA method [Fan, Han and Gu (2012)] to estimate the false discovery proportion (FDP) for arbitrary thresholds.
 In this case, the covariance matrix \code{Sigma} is required. 
 
 
 \code{pfa.test(X,...)}: X is an n-by-p matrix containing i.i.d. samples of the multivariate Gaussian distrubtion \code{N(mu, Sigma)}. Again, we would like to test: \code{mu(i)=0}, i=1,...,p. 
-The test statistics is the vector of sample mean. When \code{Sigma} is unknown, we instead use the sample covariance matrix or the estimate from POET-PFA method [Fan, Han and Gu (2012)].
+The test statistics is the vector of sample mean. When \code{Sigma} is unknown, we instead use the sample covariance matrix or the estimate from POET-PFA method [Fan and Han (2016)]. The number of factors determined for POET and for PFA is based on the eigenvalue ratio test in Ahn and Horenstein (2013). 
 
 \code{pfa.test(X,Y,...)}: X and Y are i.i.d. samples from the distributions \code{N(mu1, Sigma)} and \code{N(mu2, Sigma)}. We would like to test: \code{mu1(i)=mu2(i)}, i=1,...,p. The test statistics
 is the vector of sample mean difference. When \code{Sigma} is unknown, we instead use the pooled sample covariance matrix or the estimate from POET-PFA method.
@@ -85,13 +85,13 @@ It returns an object of class \code{PDFresults}, which is a list containing the 
 }
 \references{
 %% ~put references to the literature/web site here ~
-Fan, Han and Gu (2011) "Estimating False Discovery Proportion Under Arbitrary Covariance Dependence" (with discussion) JASA.
+Fan, Han and Gu (2012) "Estimating False Discovery Proportion Under Arbitrary Covariance Dependence" (with discussion) JASA.
 
-Fan, Han and Gu (2012) "Estimation of FDP under Unknown Dependence", Manuscript.
+Fan and Han (2016) "Estimation of False Discovery Proportion with Unknown Dependence", Manuscript.
 }
 \author{Jianqing Fan, Tracy Ke, Sydney Li and Lucy Xia.
 	
-	Maintainer: Tracy Ke <zke@princeton.edu>, Lucy Xia <lxia@princeton.edu>.
+	Maintainer: Tracy Ke <zke@galton.uchicago.edu>, Lucy Xia <lucyxia@stanford.edu>.
 %%  ~~who you are~~
 }
 \note{
@@ -113,9 +113,11 @@ a neighborhood of 0, which one is closer to the uniform distribution.
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
+Ahn and Horestein (2013) "Eigenvalue Ratio Test for the Number of Factors", Econometrica. 	
+	
 Fan, Guo and Hao (2012)"Variance Estimation Using Refitted Cross-Validation in Ultrahigh Dimensional Regression" JRSSB.
 
-Fan, Liao and Mincheva (2012) "Large Covariance Estimation by Thresholding Principal Orthogonal Complements", Manuscript.
+Fan, Liao and Mincheva (2013) "Large Covariance Estimation by Thresholding Principal Orthogonal Complements", JRSSB .
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
@@ -123,11 +125,11 @@ Fan, Liao and Mincheva (2012) "Large Covariance Estimation by Thresholding Princ
 
 require(MASS)
 p <- 100
-Sigma <- matrix(rep(0.4,p*p), nrow=p)
+Sigma <- matrix(0.4,p,p)
 diag(Sigma)<- 1
 mu <- as.vector(c(rep(3,5), rep(0, p-5)))
 Z <- mvrnorm(1, mu, Sigma)
-RE1 <- pfa.test(Z, Sigma=Sigma)
+RE1 <- pfa.test(Z, Sigma=Sigma,reg="L1")
 summary(RE1)
 
 # Example 2: multiple testing with unknown covariance 

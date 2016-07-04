@@ -35,20 +35,28 @@ pfa <- function(Z, Sigma, t, Kmax, reg="L1", e=.05, gamma, K, plot="-log") {
   }
 
 
-  # estimate the factors
+  # estimate the factors, with 5% largest |Z| eliminated.
+   
   
   if (reg == "L1") {
-    W.hat <- rq(Z ~ b - 1, 0.5)$coef     # L_1 regression (no intercept)
+    W.hat <- rq(Z ~ b -1, 0.5)$coef     # L_1 regression (no intercept)
+    # W.hat <- W.hat[2:(K+1)] 
   } 
-  else if (reg == "L2")  # L_2 regression (no intercept), with 5% largest |Z| eliminated.
+  else if (reg == "L2")  # L_2 regression (no intercept) 
   {    
-    temp<-sort(abs(Z),decreasing=TRUE,index.return=TRUE)
-    len=round(length(Z)*0.05)
-    Ztemp<-temp$x
-    btemp<-as.matrix(b[temp$ix,])
-    Ztemp<-Ztemp[(len+1):length(Z)]
-    btemp<-btemp[(len+1):length(Z),]
-    W.hat<-lm(Ztemp ~ btemp - 1)$coef
+    #temp<-sort(abs(Z),decreasing=TRUE,index.return=TRUE)
+    #len=round(length(Z)*0.05)
+    #Ztemp<-temp$x
+    #btemp<-as.matrix(b[temp$ix,])
+    #Ztemp<-Ztemp[(len+1):length(Z)]
+    #btemp<-btemp[(len+1):length(Z),]
+    #W.hat<-lm(Ztemp ~ btemp - 1)$coef
+    o = order(abs(Z))
+    Zperm = Z[o]
+    Lperm = as.matrix(b[o,])
+    Z.reduce = Zperm[1:(p*0.95)]
+    L.reduce = as.matrix(Lperm[1:(p*0.95),]) 
+    W.hat = lsfit(x=L.reduce,y=Z.reduce,intercept=F)$coef
   }
   #if (reg == "huber") {
     #W.hat <- rlm(Z ~ b, 0.5)$coef	  # robust/huber regression
@@ -90,7 +98,8 @@ pfa <- function(Z, Sigma, t, Kmax, reg="L1", e=.05, gamma, K, plot="-log") {
        
   FDPt <- Vt <- Rt<- rep(0, length(t))
   for (l in 1:length(t)) {
-       Rt[l] <- sum(P<=t[l])
+  	   P1 <- 2*(1-pnorm(abs(Z)))
+       Rt[l] <- sum(P1<=t[l])
        a <- rep(0,p)
        for (j in 1:p)  {
            qtl <- qnorm(t[l]/2)

@@ -7,7 +7,7 @@ require(POET)
 ##### user function 1: pfa.test #####
 #####################################
 
-pfa.test <- function(X, Y, tval, Sigma, reg="L1", K, e=0.05, gamma, mat_est="poet", plot="-log") {
+pfa.test <- function(X, Y, tval, Sigma, reg="L2", K, e=0.05, gamma, mat_est="poet", plot="-log") {
 
 
 # compute the test statistics
@@ -28,6 +28,38 @@ if (missing(Y)) {
 }
 p <- length(Z)
 Kmax <- p
+
+# determine number of factors
+if (missing(K)&(ncol(X)>=2)) {
+	if(missing(Y)){
+	  kmax<-floor(0.2*nrow(X))
+	  if(kmax<=1){
+		stop("No enough samples to determine the number of factors!")
+	   }else{
+      sample.cor<-cor(t(X),t(X))
+      sample.pca<-eigen(sample.cor)
+      sample.eigval<-sample.pca$values
+      ratio<-sample.eigval[1:(kmax-1)]/sample.eigval[2:kmax]
+      K<-which(ratio==max(ratio))	
+       }
+    }else{
+    	  n<-nrow(X)
+    	  m<-nrow(Y)
+    	  kmax<-floor(0.2*(n+m))
+    	  if(kmax<=1){
+    	  	stop("No enough samples to determine the number of factors!")
+    	  }else{
+    	    Xmean<-apply(X,2,mean)
+    	    Ymean<-apply(Y,2,mean)
+    	    Znew<-as.matrix(rbind(X-Xmean,Y-Ymean))
+    	    sample.cor<-cor(t(Znew),t(Znew))
+        sample.pca<-eigen(sample.cor)
+        sample.eigval<-sample.pca$values
+        ratio<-sample.eigval[1:(kmax-1)]/sample.eigval[2:kmax]
+        K<-which(ratio==max(ratio))
+      }
+    }
+}
 
 
 # compute the covariance matrix
@@ -55,13 +87,15 @@ if (missing(Sigma)) {
              n <- nrow(X)
              barX <- matrix(colMeans(X), nrow=n, ncol=p, byrow=T)
              if (missing(Y)) {
-                R <- X - barX
+                # R <- X - barX
+                R<-X
              } else {
                 n2 <- nrow(Y)
                 barY <- matrix(colMeans(Y), nrow=n2, ncol=p, byrow=T)
-                R <- rbind(X-barX, Y-barY)
+                # R <- rbind(X-barX, Y-barY)
+                R<-rbind(X,Y)
              }
-             Sigma <- POET(t(R),K=6,C=0.5)$SigmaY
+             Sigma <- POET(t(R),K=K,C=0.5,thres='soft',matrix='vad')$SigmaY
              Kmax <- p
           }
      }
@@ -69,7 +103,7 @@ if (missing(Sigma)) {
 
 # run the test and compute FDP
 
-results <- pfa(Z, Sigma, t=tval, Kmax=Kmax, reg=reg, e=e, gamma=gamma, K=K, plot=plot)
+results <- pfa(Z=Z, Sigma=Sigma, t=tval, Kmax=Kmax, reg=reg, e=e, gamma=gamma, K=K, plot=plot)
 return(results)
 
 }
